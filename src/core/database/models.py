@@ -8,8 +8,6 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy import ForeignKey, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship, composite
 
-from src.utils.formatters import format_month
-
 
 class Base(DeclarativeBase):
     pass
