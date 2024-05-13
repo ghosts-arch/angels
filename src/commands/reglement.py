@@ -15,6 +15,7 @@ class ApplicationCommand(Interaction):
     def __init__(self) -> None:
         self.name = "reglement"
         self.description = "Reglement du serveur"
+        self.moderator_only = True
         self.options = [
             {
                 "name": "afficher",
