@@ -31,4 +31,5 @@ class Guild(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     guild_id: Mapped[int] = mapped_column(nullable=False)
+    member_role_id: Mapped[int] = mapped_column(nullable=False)
     rules: Mapped["Rule"] = relationship(back_populates="guild", lazy="selectin")
