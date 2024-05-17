@@ -33,5 +33,6 @@ class AcceptRulesView(discord.ui.View):
             raise Exception("This role does not exists anymore")
         if not isinstance(interaction.user, discord.Member):
             raise Exception()
-
+        if not interaction.app_permissions.manage_roles:
+            raise Exception("Bot needs the permission to add a role")
         await interaction.user.add_roles(role)
