@@ -29,6 +29,16 @@ class SetMemberRoleView(discord.ui.View):
             raise Exception("No data")
         if not interaction.data.get("values"):
             raise Exception("No values")
-        member_id = interaction.data.get("values")[0]
-        successEmbed = SuccessEmbed(description=f"Rôle de membre modifié avec succès")
+        if not interaction.guild:
+            raise Exception("This view is only available in servers.")
+        role_id = interaction.data.get("values")[0]
+        interaction.client.database.set_member_role(
+            guild_id=interaction.guild.id, role_id=role_id
+        )
+        role = interaction.guild.get_role(int(role_id))
+        if not role:
+            raise Exception("This role does not exists anymore.")
+        successEmbed = SuccessEmbed(
+            description=f"Le rôle '{role.name}' sera attribué à tous les membres qui accepteront le reglement"
+        )
         await interaction.response.send_message(embed=successEmbed)

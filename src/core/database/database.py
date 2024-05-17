@@ -30,10 +30,27 @@ class Database:
 
     def create_guild(self, guild_id: int):
         with self.Session() as session:
-            guild = Guild(guild_id=guild_id)
+            guild = Guild(guild_id=guild_id, member_role_id=None)
             session.add(guild)
             session.commit()
             return guild
+
+    def find_guild(self, guild_id):
+        with self.Session() as session:
+            stmt = select(Guild).where(Guild.guild_id == guild_id)
+            guild = session.scalars(statement=stmt).first()
+            if not guild:
+                raise Exception("This guild does not exists.")
+            return guild
+
+    def set_member_role(self, guild_id: int, role_id):
+        with self.Session() as session:
+            guild = self.find_guild(guild_id=guild_id)
+            print(guild.member_role_id)
+            guild.set_member_role_id(role_id=role_id)
+            print(guild.member_role_id)
+            session.add(guild)
+            session.commit()
 
     def get_rules(self, guild_id: int):
         with self.Session() as session:

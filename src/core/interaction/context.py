@@ -111,6 +111,7 @@ class Context:
         content: str | None = None,
         embed: Embed | None = None,
         file=None,
+        view: discord.ui.View | None = None,
     ):
         if not self.guild:
             raise Exception("This command is only available in a guild")
@@ -126,6 +127,8 @@ class Context:
             response["embed"] = embed
         if file:
             response["file"] = file
+        if view:
+            response["view"] = view
         try:
             await channel.send(**response)
             await self.interaction.response.send_message(content="✅", ephemeral=True)
