@@ -92,18 +92,18 @@ class Context:
             response["embed"] = embed
         if file:
             response["file"] = file
+        if view:
+            response["view"] = view
 
         if not (self.channel.permissions_for(self.guild.me).send_messages):
             logger.warn("Bot not have permission to send message")
             return
 
         try:
-            if view:
-                await self.interaction.response.send_message(**response, view=view)
-            else:
-                await self.interaction.response.send_message(**response)
+            response = await self.interaction.response.send_message(**response)
         except Exception as e:
             logger.error(e)
+        return response
 
     async def send_in_channel(
         self,
@@ -111,6 +111,7 @@ class Context:
         content: str | None = None,
         embed: Embed | None = None,
         file=None,
+        view: discord.ui.View | None = None,
     ):
         if not self.guild:
             raise Exception("This command is only available in a guild")
@@ -126,8 +127,13 @@ class Context:
             response["embed"] = embed
         if file:
             response["file"] = file
+        if view:
+            response["view"] = view
         try:
-            await channel.send(**response)
+            response = await channel.send(**response)
+            if not response:
+                raise Exception("Error sending message")
             await self.interaction.response.send_message(content="✅", ephemeral=True)
         except Exception as error:
             logger.error(error)
+        return response

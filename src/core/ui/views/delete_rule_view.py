@@ -1,6 +1,6 @@
 import discord
 
-from src.core.client import Angels
+import src.core.client as client
 from src.core.embeds import SuccessEmbed, ErrorEmbed
 from src.core.ui.buttons import CancelationButton, ConfirmationButton
 
@@ -26,7 +26,7 @@ class DeleteRuleView(discord.ui.View):
             embed=ErrorEmbed(description=f"Annulation de la commande ❌")
         )
 
-    async def on_confirm(self, interaction: discord.Interaction[Angels]):
+    async def on_confirm(self, interaction: discord.Interaction):
         await interaction.response.defer()
         await interaction.delete_original_response()
         if not interaction.data:

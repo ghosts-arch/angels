@@ -3,7 +3,7 @@ import discord.types
 import discord.types.snowflake
 
 
-from src.core.ui.views import DeleteRuleView
+from src.core.ui.views import DeleteRuleView, AcceptRulesView
 
 from src.core.ui.buttons import ConfirmationButton, CancelationButton
 from src.core.ui.forms import AddRuleForm, EditRuleForm
@@ -71,6 +71,7 @@ class ApplicationCommand(Interaction):
         match subcommand:
             case "afficher":
                 rules = context.client.database.get_rules(context.guild.id)
+                accept_rules_view = AcceptRulesView()
                 if not rules:
                     error_embed = ErrorEmbed(
                         description="Il n'y a pas de règles pour le moment. Vous pouvez ajouter une règle avec la commande </reglement ajouter:1231990212922445894>.",
@@ -88,15 +89,21 @@ class ApplicationCommand(Interaction):
                         inline=False,
                     )
                 if not arguments:
-                    return await context.send(embed=embed)
+                    await context.send(embed=embed, view=accept_rules_view)
+                    response = await context.interaction.original_response()
                 else:
                     channel = arguments[0].get("value")
                     if not channel:
                         raise Exception("Invalid channel id")
 
                     return await context.send_in_channel(
-                        channel_id=int(channel), embed=embed
+                        channel_id=int(channel), embed=embed, view=accept_rules_view
                     )
+                if not response:
+                    raise Exception("Invalid response")
+                context.client.database.set_reglement_message_id(
+                    context.guild.id, response.id
+                )
             case "ajouter":
                 add_rule_form = AddRuleForm()
                 return await context.interaction.response.send_modal(add_rule_form)
