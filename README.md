@@ -27,3 +27,7 @@ A chaque changement, vous avez la possibilité d'envoyer une notification à tou
 # Contribution
 
 Angels est un projet completement open-source et ouvert a toute personne qui voudrait contribuer que ce soit par des suggestions d'améliorations, des tests et signalements de bugs ou le développement de nouvelles fonctionalités.
+
+# Contact
+
+Pour toute demande, je reste disponible sur le serveur officiel du bot que vous pouvez rejoindre [ici](https://discord.gg/8G4d66GcFU).
