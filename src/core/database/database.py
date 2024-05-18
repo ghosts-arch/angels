@@ -43,12 +43,24 @@ class Database:
                 raise Exception("This guild does not exists.")
             return guild
 
+    def get_all_reglement_messages_id(self):
+        with self.Session() as session:
+            stmt = select(Guild.reglement_message_id)
+            return session.scalars(statement=stmt).all()
+
     def set_member_role(self, guild_id: int, role_id):
         with self.Session() as session:
             guild = self.find_guild(guild_id=guild_id)
             print(guild.member_role_id)
             guild.set_member_role_id(role_id=role_id)
             print(guild.member_role_id)
+            session.add(guild)
+            session.commit()
+
+    def set_reglement_message_id(self, guild_id: int, message_id):
+        with self.Session() as session:
+            guild = self.find_guild(guild_id=guild_id)
+            guild.set_reglement_message_id(message_id=message_id)
             session.add(guild)
             session.commit()
 

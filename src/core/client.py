@@ -16,6 +16,7 @@ from .interaction import (
     load_application_commands,
     register_application_commands,
 )
+from src.core.ui.views import AcceptRulesView
 from .config import load_config
 from ..utils.logger import Logger
 
@@ -47,6 +48,10 @@ class Angels(discord.Client):
         except Exception:
             logger.error(traceback.format_exc())
 
+        reglements_messages_id = self.database.get_all_reglement_messages_id()
+        for reglement_message_id in reglements_messages_id:
+            self.add_view(AcceptRulesView(), message_id=reglement_message_id)
+        print(self.persistent_views)
         logger.info(f"Logged as {self.user}")
         test_channel = self.get_channel(self.config.get("TEST_CHANNEL_ID"))
 

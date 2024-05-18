@@ -89,7 +89,8 @@ class ApplicationCommand(Interaction):
                         inline=False,
                     )
                 if not arguments:
-                    return await context.send(embed=embed, view=accept_rules_view)
+                    await context.send(embed=embed, view=accept_rules_view)
+                    response = await context.interaction.original_response()
                 else:
                     channel = arguments[0].get("value")
                     if not channel:
@@ -98,6 +99,11 @@ class ApplicationCommand(Interaction):
                     return await context.send_in_channel(
                         channel_id=int(channel), embed=embed, view=accept_rules_view
                     )
+                if not response:
+                    raise Exception("Invalid response")
+                context.client.database.set_reglement_message_id(
+                    context.guild.id, response.id
+                )
             case "ajouter":
                 add_rule_form = AddRuleForm()
                 return await context.interaction.response.send_modal(add_rule_form)

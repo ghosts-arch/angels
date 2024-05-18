@@ -1,6 +1,5 @@
 import discord
-
-from src.core.client import Angels
+import src.core.client as client
 from src.core.embeds import ErrorEmbed, SuccessEmbed
 
 
@@ -24,7 +23,7 @@ class SetMemberRoleView(discord.ui.View):
         self.member_role_select.callback = self.on_select
         self.add_item(self.member_role_select)
 
-    async def on_select(self, interaction: discord.Interaction[Angels]):
+    async def on_select(self, interaction: discord.Interaction):
         if not interaction.data:
             raise Exception("No data")
         if not interaction.data.get("values"):

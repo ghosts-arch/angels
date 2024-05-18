@@ -31,6 +31,7 @@ class Guild(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     guild_id: Mapped[int] = mapped_column(nullable=False)
+    reglement_message_id: Mapped[Optional[int]] = mapped_column()
     member_role_id: Mapped[Optional[int]] = mapped_column()
     rules: Mapped["Rule"] = relationship(back_populates="guild", lazy="selectin")
 
@@ -39,3 +40,6 @@ class Guild(Base):
 
     def set_member_role_id(self, role_id):
         self.member_role_id = role_id
+
+    def set_reglement_message_id(self, message_id):
+        self.reglement_message_id = message_id
