@@ -22,15 +22,21 @@ headers = {
     "Authorization": f"Bot {bot_token}",
 }
 
+
 def unload_application_commands():
 
     response = requests.get(url, headers=headers)
+    print(response)
 
     for data in response.json():
         result = requests.delete(
-            url = (
+            url=(
                 f"https://discord.com/api/v10/applications/{application_id}"
                 + f"/commands/{data['id']}"
             ),
-            headers = headers,
+            headers=headers,
         )
+        print(result.ok)
+
+
+unload_application_commands()

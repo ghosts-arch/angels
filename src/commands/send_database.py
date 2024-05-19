@@ -12,7 +12,7 @@ class ApplicationCommand(Interaction):
         self.description = "Renvoie la base de données"
         self.adminstration_channel_only = True
         self.moderator_only = True
-        self.hidden = True
+        self.private_command = True
 
     async def run(self, context: Context):
         database = context.client.database.send_database()

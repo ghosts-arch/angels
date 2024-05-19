@@ -24,8 +24,11 @@ application_id = dotenv.get_key(
 bot_token = dotenv.get_key(
     dotenv_path=path, key_to_get="CLIENT_TOKEN", encoding="utf-8"
 )
+support_guild_id = dotenv.get_key(
+    dotenv_path=path, key_to_get="SUPPORT_GUILD_ID", encoding="utf-8"
+)
 
-url = f"https://discord.com/api/v10/applications/{application_id}/commands"
+
 headers = {
     "Authorization": f"Bot {bot_token}",
 }
@@ -39,6 +42,11 @@ def update_command_to_discord(
         "type": 1,
         "description": application_command.get_description(),
     }
+
+    if application_command.private_command:
+        url = f"https://discord.com/api/v10/applications/{application_id}/guilds/{support_guild_id}/commands"
+    else:
+        url = f"https://discord.com/api/v10/applications/{application_id}/commands"
 
     if hasattr(application_command, "options"):
         payload["options"] = application_command.get_options()

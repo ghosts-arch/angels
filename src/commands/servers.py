@@ -13,7 +13,7 @@ class ApplicationCommand(Interaction):
         self.description = "Renvoie la liste des servers"
         self.adminstration_channel_only = True
         self.moderator_only = True
-        self.hidden = True
+        self.private_command = True
 
     async def run(self, context: Context):
         for server in context.client.guilds:
