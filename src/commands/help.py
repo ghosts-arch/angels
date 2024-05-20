@@ -11,7 +11,7 @@ class ApplicationCommand(Interaction):
         commands = context.client.application_commands
         embed = Embed()
         for command_name, command in commands.items():
-            if command.hidden:
+            if command.private_command:
                 continue
             embed.add_field(
                 name=f"Commande : {command_name}",
