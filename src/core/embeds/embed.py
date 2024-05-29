@@ -25,3 +25,7 @@ class Embed(discord.Embed):
     def set_description(self, description: str):
         self.description = description
         return self
+
+    def set_title(self, title: str):
+        self.title = title
+        return self

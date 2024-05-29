@@ -48,10 +48,9 @@ class Angels(discord.Client):
         except Exception:
             logger.error(traceback.format_exc())
 
-        reglements_messages_id = self.database.get_all_reglement_messages_id()
+        """reglements_messages_id = self.database.get_all_reglement_messages_id()
         for reglement_message_id in reglements_messages_id:
-            self.add_view(AcceptRulesView(), message_id=reglement_message_id)
-        print(self.persistent_views)
+            self.add_view(AcceptRulesView(), message_id=reglement_message_id)"""
         logger.info(f"Logged as {self.user}")
         test_channel = self.get_channel(self.config.get("TEST_CHANNEL_ID"))
 

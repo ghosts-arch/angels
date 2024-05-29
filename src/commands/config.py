@@ -3,11 +3,10 @@ import discord.types
 import discord.types.snowflake
 
 
-from src.core.ui.views import DeleteRuleView, SetMemberRoleView
+from src.core.ui.views import ConfigMenuView
 
-from src.core.ui.buttons import ConfirmationButton, CancelationButton
-from src.core.ui.forms import AddRuleForm, EditRuleForm
-from src.core.embeds import ErrorEmbed, SuccessEmbed, Embed
+
+from src.core.embeds import Embed
 from src.core.interaction import Interaction, Context
 
 
@@ -23,11 +22,14 @@ class ApplicationCommand(Interaction):
             raise Exception("This command is only available in guilds")
         if not context.client.user:
             raise Exception("Bot is not logged in.")
-        embed = Embed(
-            title=f"Configuration de {context.client.user.name}",
-            description="Choix du role à donner aux membres qui valident le reglement",
+        embed = (
+            Embed()
+            .set_title(f"Configuration de {context.client.user.name}")
+            .set_description(
+                "1. Choix du role à donner aux membres qui valident le reglement\n2. choix du salon ou sera affiché le reglement"
+            )
         )
 
-        member_role_select = SetMemberRoleView(guild_roles=context.guild.roles)
-        await context.send(embed=embed, view=member_role_select)
+        config_menu = ConfigMenuView()
+        await context.send(embed=embed, view=config_menu)
         return

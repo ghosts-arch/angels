@@ -44,7 +44,7 @@ class AddRuleForm(Modal):
     async def on_submit(self, interaction: discord.Interaction[Angels]):
         if not interaction.guild:
             raise Exception("This command can only be used in a guild")
-        print(interaction.guild.id)
+
         tag = format_tag(self.rule_tag.value)
         rule = interaction.client.database.add_rule(
             guild_id=interaction.guild.id,
@@ -64,6 +64,4 @@ class AddRuleForm(Modal):
 
 
 def format_tag(tag: str):
-
-    # print(re.sub(r"[^\d\w]", "", tag))
     return re.sub(r"[^\d\w]", " ", tag).lower()

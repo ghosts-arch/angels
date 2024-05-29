@@ -26,7 +26,6 @@ headers = {
 def unload_application_commands():
 
     response = requests.get(url, headers=headers)
-    print(response)
 
     for data in response.json():
         result = requests.delete(
@@ -36,7 +35,6 @@ def unload_application_commands():
             ),
             headers=headers,
         )
-        print(result.ok)
 
 
 unload_application_commands()

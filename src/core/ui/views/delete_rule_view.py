@@ -6,8 +6,8 @@ from src.core.ui.buttons import CancelationButton, ConfirmationButton
 
 
 class DeleteRuleView(discord.ui.View):
-    def __init__(self, rule):
-        super().__init__()
+    def __init__(self, rule, timeout: int = 240):
+        super().__init__(timeout=timeout)
         cancel_button = CancelationButton(
             label="Annuler", custom_id="cancel_delete_rule", callback=self.on_cancel
         )
@@ -43,3 +43,4 @@ class DeleteRuleView(discord.ui.View):
                 name=rule.title, value=rule.content
             )
         )
+        self.stop()

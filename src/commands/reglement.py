@@ -7,7 +7,7 @@ from src.core.ui.views import DeleteRuleView, AcceptRulesView
 
 from src.core.ui.buttons import ConfirmationButton, CancelationButton
 from src.core.ui.forms import AddRuleForm, EditRuleForm
-from src.core.embeds import ErrorEmbed, SuccessEmbed, Embed
+from src.core.embeds import Embed, ErrorEmbed, SuccessEmbed
 from src.core.interaction import Interaction, Context
 
 
@@ -21,14 +21,11 @@ class ApplicationCommand(Interaction):
                 "name": "afficher",
                 "description": "Affiche le reglement du serveur",
                 "type": 1,
-                "options": [
-                    {
-                        "name": "channel",
-                        "description": "Salon d'affichage du reglement",
-                        "type": 7,
-                        "required": False,
-                    }
-                ],
+            },
+            {
+                "name": "publier",
+                "description": "publie le reglement du serveur",
+                "type": 1,
             },
             {
                 "name": "ajouter",
@@ -71,11 +68,12 @@ class ApplicationCommand(Interaction):
         match subcommand:
             case "afficher":
                 rules = context.client.database.get_rules(context.guild.id)
-                accept_rules_view = AcceptRulesView()
+
                 if not rules:
                     error_embed = ErrorEmbed(
-                        description="Il n'y a pas de règles pour le moment. Vous pouvez ajouter une règle avec la commande </reglement ajouter:1231990212922445894>.",
+                        description="Il n'y a pas de règles pour le moment. Vous pouvez ajouter une règle avec la commande </reglement ajouter:1231990212922445894>."
                     )
+
                     return await context.send(embed=error_embed)
                 embed = Embed(description=f"### Règlement du serveur")
                 for rule in rules:
@@ -88,22 +86,46 @@ class ApplicationCommand(Interaction):
                         value=rule.content,
                         inline=False,
                     )
-                if not arguments:
-                    await context.send(embed=embed, view=accept_rules_view)
-                    response = await context.interaction.original_response()
-                else:
-                    channel = arguments[0].get("value")
-                    if not channel:
-                        raise Exception("Invalid channel id")
 
-                    return await context.send_in_channel(
-                        channel_id=int(channel), embed=embed, view=accept_rules_view
+                await context.send(embed=embed)
+                # response = await context.interaction.original_response()
+            case "publier":
+                print("0")
+                rules = context.client.database.get_rules(guild_id=context.guild.id)
+                if not rules:
+                    error_embed = ErrorEmbed(
+                        description="Il n'y a pas de règles pour le moment. Vous pouvez ajouter une règle avec la commande </reglement ajouter:1231990212922445894>."
                     )
-                if not response:
-                    raise Exception("Invalid response")
-                context.client.database.set_reglement_message_id(
-                    context.guild.id, response.id
+                    return await context.send(embed=error_embed)
+                accept_rules_view = AcceptRulesView()
+                embed = Embed(description=f"### Règlement du serveur")
+                for rule in rules:
+                    if rule.title:
+                        name = f"{rule.title}"
+                    else:
+                        name = ""
+                    embed.add_field(
+                        name=name,
+                        value=rule.content,
+                        inline=False,
+                    )
+                print("1")
+                guild = context.client.database.find_guild(context.guild.id)
+                reglement_channel_id = guild.reglement_channel_id
+                if not reglement_channel_id:
+                    raise Exception("No reglement channel specified")
+                channel = context.guild.get_channel(reglement_channel_id)
+                if not channel:
+                    raise Exception("Invalid channel id")
+
+                response = await context.send_in_channel(
+                    channel_id=reglement_channel_id, embed=embed, view=accept_rules_view
                 )
+                print("2")
+                context.client.database.set_reglement_message_id(
+                    guild_id=context.guild.id, message_id=response.id
+                )
+
             case "ajouter":
                 add_rule_form = AddRuleForm()
                 return await context.interaction.response.send_modal(add_rule_form)
@@ -145,6 +167,39 @@ class ApplicationCommand(Interaction):
                 view = DeleteRuleView(rule=rule)
 
                 await context.interaction.response.send_message(embed=embed, view=view)
+                await view.wait()
+                guild = context.client.database.find_guild(guild_id=context.guild.id)
+                rules = context.client.database.get_rules(guild_id=context.guild.id)
+                reglement_channel_id = guild.reglement_channel_id
+                if not reglement_channel_id:
+                    raise Exception("No reglement channel specified")
+                channel = context.guild.get_channel(reglement_channel_id)
+                if not channel:
+                    raise Exception("Invalid channel id")
+                embed = Embed(description=f"### Règlement du serveur")
+                for rule in rules:
+                    if rule.title:
+                        name = f"{rule.title}"
+                    else:
+                        name = ""
+                    embed.add_field(
+                        name=name,
+                        value=rule.content,
+                        inline=False,
+                    )
+                    reglement_message_id = guild.reglement_message_id
+                    if not reglement_message_id:
+                        raise Exception("No reglement message specified")
+                    reglement_message = await channel.fetch_message(
+                        reglement_message_id
+                    )
+                    if not reglement_message:
+                        raise Exception("Invalid message id")
+                    try:
+                        print("3")
+                        await reglement_message.edit(embed=embed)
+                    except Exception as e:
+                        print(e)
 
             case _:
                 raise Exception("Unknown subcommand.")

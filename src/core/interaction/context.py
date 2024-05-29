@@ -120,20 +120,15 @@ class Context:
             raise Exception("Channel not found")
         if not isinstance(channel, discord.TextChannel):
             raise Exception("Channel is not a text channel")
-        response = {}
+        data = {}
         if content:
-            response["content"] = content
+            data["content"] = content
         if embed:
-            response["embed"] = embed
+            data["embed"] = embed
         if file:
-            response["file"] = file
+            data["file"] = file
         if view:
-            response["view"] = view
-        try:
-            response = await channel.send(**response)
-            if not response:
-                raise Exception("Error sending message")
+            data["view"] = view
+            response = await channel.send(**data)
             await self.interaction.response.send_message(content="✅", ephemeral=True)
-        except Exception as error:
-            logger.error(error)
         return response

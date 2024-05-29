@@ -3,5 +3,5 @@
 # ----------------------------------------------------------------------------
 
 from .embed import Embed
-from .success_embed import SuccessEmbed
 from .error_embed import ErrorEmbed
+from .success_embed import SuccessEmbed
