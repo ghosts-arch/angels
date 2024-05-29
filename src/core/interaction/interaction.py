@@ -29,7 +29,7 @@ class Interaction(ABC):
     options: list[Option] = []
     adminstration_channel_only: bool = False
     moderator_only: bool = False
-    hidden: bool = False
+    private_command: bool = False
 
     def __init__(self) -> None:
         pass

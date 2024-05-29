@@ -1,5 +1,6 @@
 from discord import TextStyle
 import discord
+import re
 from discord.ui import Modal, TextInput
 
 from src.core.embeds import SuccessEmbed
@@ -44,10 +45,11 @@ class AddRuleForm(Modal):
         if not interaction.guild:
             raise Exception("This command can only be used in a guild")
         print(interaction.guild.id)
+        tag = format_tag(self.rule_tag.value)
         rule = interaction.client.database.add_rule(
             guild_id=interaction.guild.id,
             title=self.rule_title.value,
-            tag=self.rule_tag.value,
+            tag=tag,
             content=self.rule_content.value,
         )
         self.stop()
@@ -59,3 +61,9 @@ class AddRuleForm(Modal):
             name=name, value=rule.content
         )
         await interaction.response.send_message(embed=embed)
+
+
+def format_tag(tag: str):
+
+    # print(re.sub(r"[^\d\w]", "", tag))
+    return re.sub(r"[^\d\w]", " ", tag).lower()
