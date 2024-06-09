@@ -1,8 +1,10 @@
+from typing import Sequence
 import discord
 import discord.types
 import discord.types.snowflake
 
 
+from src.core.database.models import Rule
 from src.core.ui.views import DeleteRuleView, AcceptRulesView
 
 from src.core.ui.buttons import ConfirmationButton, CancelationButton
@@ -75,7 +77,7 @@ class ApplicationCommand(Interaction):
                     )
 
                     return await context.send(embed=error_embed)
-                embed = Embed(description=f"### Règlement du serveur")
+                """embed = Embed(description=f"### Règlement du serveur")
                 for rule in rules:
                     if rule.title:
                         name = f"{rule.title} (*tag : {rule.tag}*)"
@@ -87,7 +89,11 @@ class ApplicationCommand(Interaction):
                         inline=False,
                     )
 
-                await context.send(embed=embed)
+                await context.send(embed=embed)"""
+                moderation_view = ModerationView(
+                    interaction=context.interaction, rules=rules
+                )
+                await moderation_view.send()
                 # response = await context.interaction.original_response()
             case "publier":
                 print("0")
@@ -128,7 +134,44 @@ class ApplicationCommand(Interaction):
 
             case "ajouter":
                 add_rule_form = AddRuleForm()
-                return await context.interaction.response.send_modal(add_rule_form)
+                await context.interaction.response.send_modal(add_rule_form)
+                await add_rule_form.wait()
+                guild = context.client.database.find_guild(guild_id=context.guild.id)
+                rules = context.client.database.get_rules(guild_id=context.guild.id)
+                reglement_channel_id = guild.reglement_channel_id
+                if not reglement_channel_id:
+                    raise Exception("No reglement channel specified")
+                channel = context.guild.get_channel(reglement_channel_id)
+                if not channel:
+                    raise Exception("Invalid channel id")
+                embed = Embed(description=f"### Règlement du serveur")
+                for rule in rules:
+                    if rule.title:
+                        name = f"{rule.title}"
+                    else:
+                        name = ""
+                    embed.add_field(
+                        name=name,
+                        value=rule.content,
+                        inline=False,
+                    )
+                    reglement_message_id = guild.reglement_message_id
+                    if not reglement_message_id:
+                        raise Exception("No reglement message specified")
+
+                    try:
+                        reglement_message = await channel.fetch_message(
+                            reglement_message_id
+                        )
+                    except Exception as e:
+                        print(e)
+                    if not reglement_message:
+                        raise Exception("Invalid message id")
+                    try:
+                        print("3")
+                        await reglement_message.edit(embed=embed)
+                    except Exception as e:
+                        print(e)
             case "modifier":
                 if not arguments:
                     raise Exception("You must specify the tag of the rule to edit.")
@@ -143,7 +186,41 @@ class ApplicationCommand(Interaction):
                 if not rule:
                     raise Exception("The rule does not exist.")
                 edit_rule_form = EditRuleForm(rule=rule)
-                return await context.interaction.response.send_modal(edit_rule_form)
+                await context.interaction.response.send_modal(edit_rule_form)
+                await edit_rule_form.wait()
+                guild = context.client.database.find_guild(guild_id=context.guild.id)
+                rules = context.client.database.get_rules(guild_id=context.guild.id)
+                reglement_channel_id = guild.reglement_channel_id
+                if not reglement_channel_id:
+                    raise Exception("No reglement channel specified")
+                channel = context.guild.get_channel(reglement_channel_id)
+                if not channel:
+                    raise Exception("Invalid channel id")
+                embed = Embed(description=f"### Règlement du serveur")
+                for rule in rules:
+                    if rule.title:
+                        name = f"{rule.title}"
+                    else:
+                        name = ""
+                    embed.add_field(
+                        name=name,
+                        value=rule.content,
+                        inline=False,
+                    )
+                    reglement_message_id = guild.reglement_message_id
+                    if not reglement_message_id:
+                        raise Exception("No reglement message specified")
+                    reglement_message = await channel.fetch_message(
+                        reglement_message_id
+                    )
+                    if not reglement_message:
+                        raise Exception("Invalid message id")
+                    try:
+                        print("3")
+                        await reglement_message.edit(embed=embed)
+                    except Exception as e:
+                        print(e)
+
             case "supprimer":
                 if not arguments:
                     raise Exception("You must specify the tag of the rule to delete.")
@@ -203,3 +280,229 @@ class ApplicationCommand(Interaction):
 
             case _:
                 raise Exception("Unknown subcommand.")
+
+
+class ModerationView:
+    def __init__(self, interaction: discord.Interaction, rules: Sequence[Rule]):
+        # super().__init__()
+        self.rules = rules
+        self.interaction = interaction
+        self.current_page = 0
+
+    async def send(self):
+        embed = Embed().add_field(
+            name=self.rules[self.current_page].title,
+            value=self.rules[self.current_page].content,
+            inline=False,
+        )
+        view = discord.ui.View(timeout=240)
+        previous_button = discord.ui.Button(
+            label="précedant",
+            style=discord.ButtonStyle.gray,
+            emoji="⬅️",
+        )
+        if self.current_page - 1 < 0:
+            previous_button.disabled = True
+        edit_button = discord.ui.Button(
+            label="éditer",
+            style=discord.ButtonStyle.primary,
+            emoji="✏️",
+        )
+        edit_button.callback = lambda interaction: self.edit_rule(
+            self.rules[self.current_page], interaction=interaction
+        )
+        delete_button = discord.ui.Button(
+            label="supprimer", style=discord.ButtonStyle.red, emoji="🗑️"
+        )
+        delete_button.callback = lambda interaction: self.delete_rule(
+            self.rules[self.current_page], interaction=interaction
+        )
+        next_button = discord.ui.Button(
+            label="suivant",
+            style=discord.ButtonStyle.gray,
+            emoji="➡️",
+        )
+        next_button.callback = self.get_next_page
+        if self.current_page + 1 >= len(self.rules):
+            next_button.disabled = True
+        view.add_item(previous_button)
+        view.add_item(edit_button)
+        view.add_item(delete_button)
+        view.add_item(next_button)
+        await self.interaction.response.send_message(embed=embed, view=view)
+
+    async def get_next_page(self, interaction: discord.Interaction):
+        self.current_page += 1
+        embed = Embed().add_field(
+            name=self.rules[self.current_page].title,
+            value=self.rules[self.current_page].content,
+            inline=False,
+        )
+        view = discord.ui.View(timeout=240)
+        previous_button = discord.ui.Button(
+            label="précedant",
+            style=discord.ButtonStyle.gray,
+            emoji="⬅️",
+        )
+        if self.current_page - 1 < 0:
+            previous_button.disabled = True
+        previous_button.callback = self.get_previous_page
+        edit_button = discord.ui.Button(
+            label="éditer",
+            style=discord.ButtonStyle.primary,
+            emoji="✏️",
+        )
+        edit_button.callback = lambda interaction: self.edit_rule(
+            self.rules[self.current_page], interaction=interaction
+        )
+        delete_button = discord.ui.Button(
+            label="supprimer", style=discord.ButtonStyle.red, emoji="🗑️"
+        )
+        delete_button.callback = lambda interaction: self.delete_rule(
+            self.rules[self.current_page], interaction=interaction
+        )
+        next_button = discord.ui.Button(
+            label="suivant",
+            style=discord.ButtonStyle.gray,
+            emoji="➡️",
+        )
+        if self.current_page + 1 >= len(self.rules):
+            next_button.disabled = True
+        next_button.callback = self.get_next_page
+        view.add_item(previous_button)
+        view.add_item(edit_button)
+        view.add_item(delete_button)
+        view.add_item(next_button)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+    async def get_previous_page(self, interaction: discord.Interaction):
+        self.current_page -= 1
+        embed = Embed().add_field(
+            name=self.rules[self.current_page].title,
+            value=self.rules[self.current_page].content,
+            inline=False,
+        )
+        view = discord.ui.View(timeout=240)
+        previous_button = discord.ui.Button(
+            label="précedant",
+            style=discord.ButtonStyle.gray,
+            emoji="⬅️",
+        )
+        if self.current_page - 1 < 0:
+            previous_button.disabled = True
+        previous_button.callback = self.get_previous_page
+        edit_button = discord.ui.Button(
+            label="éditer",
+            style=discord.ButtonStyle.primary,
+            emoji="✏️",
+        )
+        edit_button.callback = lambda interaction: self.edit_rule(
+            self.rules[self.current_page], interaction=interaction
+        )
+        delete_button = discord.ui.Button(
+            label="supprimer", style=discord.ButtonStyle.red, emoji="🗑️"
+        )
+        delete_button.callback = lambda interaction: self.delete_rule(
+            self.rules[self.current_page], interaction=interaction
+        )
+        next_button = discord.ui.Button(
+            label="suivant",
+            style=discord.ButtonStyle.gray,
+            emoji="➡️",
+        )
+        next_button.callback = self.get_next_page
+        if self.current_page + 1 >= len(self.rules):
+            next_button.disabled = True
+        view.add_item(previous_button)
+        view.add_item(edit_button)
+        view.add_item(delete_button)
+        view.add_item(next_button)
+        await interaction.response.edit_message(embed=embed, view=view)
+
+    async def edit_rule(self, rule: Rule, interaction: discord.Interaction):
+        rule = interaction.client.database.get_rule(
+            guild_id=interaction.guild.id, rule_id=rule.id
+        )
+        if not rule:
+            raise Exception("The rule does not exist.")
+        edit_rule_form = EditRuleForm(rule=rule)
+        await interaction.response.send_modal(edit_rule_form)
+        await edit_rule_form.wait()
+        guild = interaction.client.database.find_guild(guild_id=interaction.guild.id)
+        rules = interaction.client.database.get_rules(guild_id=interaction.guild.id)
+        reglement_channel_id = guild.reglement_channel_id
+        if not reglement_channel_id:
+            raise Exception("No reglement channel specified")
+        channel = interaction.guild.get_channel(reglement_channel_id)
+        if not channel:
+            raise Exception("Invalid channel id")
+        embed = Embed(description=f"### Règlement du serveur")
+        for rule in rules:
+            if rule.title:
+                name = f"{rule.title}"
+            else:
+                name = ""
+            embed.add_field(
+                name=name,
+                value=rule.content,
+                inline=False,
+            )
+            reglement_message_id = guild.reglement_message_id
+            if not reglement_message_id:
+                raise Exception("No reglement message specified")
+            reglement_message = await channel.fetch_message(reglement_message_id)
+            if not reglement_message:
+                raise Exception("Invalid message id")
+            try:
+                print("3")
+                await reglement_message.edit(embed=embed)
+            except Exception as e:
+                print(e)
+
+    async def delete_rule(self, rule: Rule, interaction: discord.Interaction):
+        rule = interaction.client.database.get_rule(
+            guild_id=interaction.guild.id, rule_id=rule.id
+        )
+        if not rule:
+            error_embed = ErrorEmbed(
+                description="Cette règle n'existe pas.",
+            )
+            return await interaction.channel.send(embed=error_embed)
+        embed = Embed(
+            title="Confirmation",
+            description=f"Êtes-vous sûr de vouloir supprimer la règle (*tag : {rule.tag}*)?",
+        )
+        view = DeleteRuleView(rule=rule)
+
+        await interaction.response.send_message(embed=embed, view=view)
+        await view.wait()
+        guild = interaction.client.database.find_guild(guild_id=interaction.guild.id)
+        rules = interaction.client.database.get_rules(guild_id=interaction.guild.id)
+        reglement_channel_id = guild.reglement_channel_id
+        if not reglement_channel_id:
+            raise Exception("No reglement channel specified")
+        channel = interaction.guild.get_channel(reglement_channel_id)
+        if not channel:
+            raise Exception("Invalid channel id")
+        embed = Embed(description=f"### Règlement du serveur")
+        for rule in rules:
+            if rule.title:
+                name = f"{rule.title}"
+            else:
+                name = ""
+            embed.add_field(
+                name=name,
+                value=rule.content,
+                inline=False,
+            )
+            reglement_message_id = guild.reglement_message_id
+            if not reglement_message_id:
+                raise Exception("No reglement message specified")
+            reglement_message = await channel.fetch_message(reglement_message_id)
+            if not reglement_message:
+                raise Exception("Invalid message id")
+            try:
+                print("3")
+                await reglement_message.edit(embed=embed)
+            except Exception as e:
+                print(e)

@@ -34,7 +34,7 @@ class EditRuleForm(Modal):
         self.rule_content = TextInput(
             label="Nouvelle règle",
             style=TextStyle.paragraph,
-            placeholder=self.__rule.content,
+            # placeholder=self.__rule.content,
             default=self.__rule.content,
             min_length=4,
             max_length=256,
@@ -64,6 +64,6 @@ class EditRuleForm(Modal):
             name = f"Règle sans titre (*tag : {rule.tag}*)"
         await interaction.response.send_message(
             embed=SuccessEmbed(title="La règle suivante à été modifiée").add_field(
-                name=name, value=self.rule.content
+                name=name, value=rule.content
             )
         )

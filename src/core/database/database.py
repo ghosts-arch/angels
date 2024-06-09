@@ -80,10 +80,10 @@ class Database:
             rules = session.scalars(statement=stmt).all()
         return rules
 
-    def get_rule(self, guild_id: int, rule_tag: str):
+    def get_rule(self, guild_id: int, rule_id: int):
         with self.Session() as session:
             stmt = select(Rule).where(
-                and_(Rule.tag == rule_tag, Rule.guild_id == guild_id)
+                and_(Rule.id == rule_id, Rule.guild_id == guild_id)
             )
             rule = session.scalars(statement=stmt).first()
         return rule
