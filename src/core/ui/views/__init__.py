@@ -3,3 +3,4 @@ from .set_member_role_view import SetMemberRoleView
 from .accept_rules_form import AcceptRulesView
 from .config_menu_view import ConfigMenuView
 from .set_reglement_channel_view import SetReglementChannelView
+from .publish_rule_view import PublishRuleView

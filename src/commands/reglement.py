@@ -5,7 +5,7 @@ import discord.types.snowflake
 
 
 from src.core.database.models import Rule
-from src.core.ui.views import DeleteRuleView, AcceptRulesView
+from src.core.ui.views import DeleteRuleView, AcceptRulesView, PublishRuleView
 
 from src.core.ui.buttons import ConfirmationButton, CancelationButton
 from src.core.ui.forms import AddRuleForm, EditRuleForm
@@ -430,34 +430,12 @@ class ModerationView:
         await edit_rule_form.wait()
         guild = interaction.client.database.find_guild(guild_id=interaction.guild.id)
         rules = interaction.client.database.get_rules(guild_id=interaction.guild.id)
-        reglement_channel_id = guild.reglement_channel_id
-        if not reglement_channel_id:
-            raise Exception("No reglement channel specified")
-        channel = interaction.guild.get_channel(reglement_channel_id)
-        if not channel:
-            raise Exception("Invalid channel id")
-        embed = Embed(description=f"### Règlement du serveur")
-        for rule in rules:
-            if rule.title:
-                name = f"{rule.title}"
-            else:
-                name = ""
-            embed.add_field(
-                name=name,
-                value=rule.content,
-                inline=False,
-            )
-            reglement_message_id = guild.reglement_message_id
-            if not reglement_message_id:
-                raise Exception("No reglement message specified")
-            reglement_message = await channel.fetch_message(reglement_message_id)
-            if not reglement_message:
-                raise Exception("Invalid message id")
-            try:
-                print("3")
-                await reglement_message.edit(embed=embed)
-            except Exception as e:
-                print(e)
+        embed = Embed(description="Voulez vous publier cette règle ?").set_footer(
+            text="⚠️ Vous allez notifier les membres du serveur. ⚠️ "
+        )
+        publish_rule_view = PublishRuleView()
+        await interaction.channel.send(embed=embed, view=publish_rule_view)
+        # await publish_rule_view.wait()
 
     async def delete_rule(self, rule: Rule, interaction: discord.Interaction):
         rule = interaction.client.database.get_rule(
